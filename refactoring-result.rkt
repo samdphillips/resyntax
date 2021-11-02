@@ -24,7 +24,8 @@
 
 
 (require fancy-app
-         framework
+         fmt
+         #;#;framework
          (only-in racket/class
                   new
                   send)
@@ -37,6 +38,8 @@
          resyntax/string-replacement
          resyntax/syntax-replacement)
 
+
+(define-logger resyntax)
 
 ;@----------------------------------------------------------------------------------------------------
 
@@ -83,8 +86,10 @@
   (define end (+ start (string-replacement-new-span replacement)))
   (define source-code (source->string (refactoring-result-source result)))
   (define refactored-source-code (string-apply-replacement source-code replacement))
+  (log-resyntax-info "~s" refactored-source-code)
   (cond
     [(string-contains? (substring refactored-source-code start end) "\n")
+     #|
      (define text-object (new racket:text%))
      (send text-object insert refactored-source-code)
      (send text-object set-position start end)
@@ -94,6 +99,9 @@
      (define indented-raw-text
        (string->immutable-string (send text-object get-text indented-start indented-end)))
      (define indented-column (+ original-column (- indented-start start)))
+     |#
+     (define indented-raw-text (program-format refactored-source-code #:indent original-column))
+     (define indented-column original-column)
      (code-snippet indented-raw-text indented-column original-line)]
     [else
      (code-snippet (substring refactored-source-code start end) original-column original-line)]))
